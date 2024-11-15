@@ -284,3 +284,6 @@ void delay(void)
   } 
    IO0PIN&=~(1<<13);
 }
+
+
+https://www.tinkercad.com/things/cYfHDLU26Us/editel
