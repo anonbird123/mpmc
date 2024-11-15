@@ -118,6 +118,65 @@ Serial.println("Go");
 delay(5000); 
 }
 
+EXP 8
+int ascii;
+int binary[8];
+char letter;
+char message;
+int number;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(2, OUTPUT);
+  pinMode(4, INPUT);
+}
+
+void loop() {
+  
+  if (Serial.available()) {
+    message = Serial.read();
+    Serial.print(message);
+    ascii = int(message);
+
+    for (int j = 0; j <= 7; j++) {
+      binary[j] = (ascii >> j) & 1;
+    }
+
+    digitalWrite(2, HIGH);
+    delay(5);
+
+    for (int i = 7; i >= 0; i--) {
+      if (binary[i] == 1) {
+        digitalWrite(2, HIGH);
+      } else if (binary[i] == 0) {
+        digitalWrite(2, LOW);
+      }
+      delay(15);
+    }
+    digitalWrite(2, LOW);
+    delay(50);
+  }
+  if (digitalRead(4) == HIGH) {
+    delay(15);
+    for (int i = 0; i <= 7; i++) {
+      if (digitalRead(4) == HIGH) {
+        binary[i] = 1;
+      } else if (digitalRead(4) == LOW) {
+        binary[i] = 0;
+      }
+      delay(15);  
+    }
+    letter = 0;
+    number = 128;
+    for (int k = 0; k <= 7; k++) {
+      letter += binary[k] * number;
+      number /= 2;
+    }
+
+    Serial.print(letter);
+  }
+}
+
 
 EXP 9
 a
