@@ -1,0 +1,159 @@
+ADC
+
+ORG 0000H
+
+START:
+    SETB P3.6            ; Set WR high initially (inactive state)
+    CLR P3.2             ; Ensure INTR is clear before starting
+    CLR P3.7             ; Set RD low (active)
+
+BEGIN_CONVERSION:
+    CLR P3.6             ; Set WR low to start conversion
+    NOP                  ; Short delay
+    SETB P3.6            ; Set WR high again to allow conversion to complete
+
+WAIT_FOR_INTR:
+    JB P3.2, WAIT_FOR_INTR ; Wait until INTR goes low, meaning conversion is done
+
+READ_DATA:
+    CLR P3.7             ; Set RD low to read data
+    MOV A, P1            ; Move converted digital value from P1 to Accumulator
+    SETB P3.7            ; Set RD high again after reading
+
+    ; Display or store the data (optional step depending on application)
+    ; Example: save data in memory location 30H
+    MOV 30H, A           ; Store result in memory for later use
+
+    SJMP START           ; Repeat the process
+
+END
+
+
+
+DAC
+
+0000| CLR P0.7
+       
+      START:
+0002|     MOV P1, #50H
+0005|     LCALL DELAY
+       
+0008|     MOV P1, #0BBH
+000B|     LCALL DELAY
+       
+000E|     SJMP START
+       
+      DELAY:
+0010|     MOV R1, #1FH
+      L2:
+0012|     DJNZ R1, L2
+0014|     RET
+
+
+
+EXP 9
+a
+
+#include <LPC214x.H> 
+unsigned int delay; 
+int main(void) 
+{ 
+IO0DIR = (1<<20);      // Configure P1.20 as Output 
+while(1) 
+{ 
+IO0CLR = (1<<20);      // CLEAR (0) P1.20 to turn LED ON 
+for(delay=0; delay<500000; delay++);     // delay 
+IO0SET = (1<<20); // SET (1) P1.10 to turn LEDs OFF 
+for(delay=0; delay<500000; delay++);            // delay 
+} 
+}
+
+
+b
+
+#include <lpc214x.h> 
+int main(void) 
+{ 
+     IO1DIR &= ~(1<<16);        // explicitly making P1.16 as Input 
+     IO0DIR |= (1<<16);           // Configuring P0.10 as Output 
+     While (1) 
+     { 
+   If (!(IO1PIN & (1<<16)))     // Evaluates to True for a 'LOW' on P1.16 
+    { 
+      IO0CLR |= (1<<16);       // drive P0.30 LOW, turn LED ON 
+    } else 
+   { 
+      IO0SET |= (1<<16);       // drive P0.30 HIGH, turn LED OFF 
+   } 
+     } 
+  return 0; 
+} 
+
+
+EXP 10
+
+#include <lpc214x.h> 
+ void initLCD(void); 
+//void enable(void); 
+void LCD_Write(unsigned int c); 
+void LCD_Cmd(unsigned int LCD_Cmd); 
+void delay(void); 
+ 
+int main(void) 
+{ 
+ unsigned char ch[]="Embedotronics"; 
+   unsigned char ch1[]="Technologies"; 
+   unsigned int i,j,k,t; 
+  
+    initLCD(); 
+  
+    for(i=0;ch[i]!='\0';i++) 
+     LCD_Write(ch[i]); 
+ 
+  LCD_Cmd(0xc3); 
+    for(j=0;ch1[j]!='\0';j++) 
+ { 
+  LCD_Write(ch1[j]); 
+   } 
+  while(1){ 
+ for(k=0;k<16;k++) 
+ { 
+ LCD_Cmd(0x1c); 
+ for(t=0;t<300000;t++); 
+ } 
+ } 
+} 
+ 
+void initLCD(void) 
+{ 
+    IO0DIR = 0x0FFFF00; 
+    delay(); //Initial Delay 
+    LCD_Cmd(0x38); 
+  LCD_Cmd(0x01); 
+  LCD_Cmd(0x0c); 
+  LCD_Cmd(0x83); 
+  LCD_Cmd(0x06); 
+} 
+ 
+void LCD_Write(unsigned int c) 
+{ 
+    IO0PIN = (c<<16)|(1<<10);  
+    delay(); //Pulse Enable to process it 
+} 
+        
+void LCD_Cmd(unsigned int LCD_Cmd) 
+{ 
+    IO0PIN = (LCD_Cmd<<16)|(0<<10); 
+    delay(); //Pulse Enable to process it 
+} 
+ 
+void delay(void) 
+{ 
+    int i=0,x=0; 
+     IO0PIN|=(1<<13); 
+    for(i=0; i<19999; i++) 
+    {  
+   x++;  
+  } 
+   IO0PIN&=~(1<<13);
+}
